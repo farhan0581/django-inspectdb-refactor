@@ -9,7 +9,7 @@ os.chdir(os.path.normpath(os.path.join(os.path.abspath(__file__), os.pardir)))
 
 setup(
     name='django-inspectdb-refactor',
-    version='0.1',
+    version='0.1.1',
     packages=find_packages(),
     include_package_data=True,
     license='BSD License',  # example license
@@ -20,9 +20,8 @@ setup(
     author_email='farhan0581@gmail.com',
     install_requires=[
         'django>=1.9',
-    ]
+    ],
     classifiers=[
-        'Development Status :: 1 - Beta',
         'Framework :: Django',
         'Framework :: Django :: 1.11',  # replace "X.Y" as appropriate
         'Intended Audience :: Developers',
