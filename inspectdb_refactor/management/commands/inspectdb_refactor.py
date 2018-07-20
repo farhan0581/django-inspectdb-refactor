@@ -38,12 +38,16 @@ class Command(InspectbCommand):
             
             # check if dir exists
             if not os.path.exists(dir_path):
-                os.makedirs(dir_path)
+                try:
+                    original_umask = os.umask(0)
+                    os.makedirs(dir_path, 0o777)
+                finally:
+                    os.umask(original_umask)
             init_file_path = ("%s/%s")%(dir_path, self.init_file)
 
             # check if file exists
             if not os.path.exists(init_file_path):
-                os.mknod(init_file_path)
+                open(init_file_path, 'w').close()
             modules_path[module] = dir_path
 
         self.modules_path= modules_path
@@ -69,7 +73,7 @@ class Command(InspectbCommand):
             path = ("%s/%s") % (path, file_name)
 
             if not os.path.exists(path):
-                os.mknod(path)
+                open(path, 'w').close()
         return model_file
 
 
