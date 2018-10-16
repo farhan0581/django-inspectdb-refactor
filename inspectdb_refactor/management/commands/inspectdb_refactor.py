@@ -7,22 +7,38 @@ from django.db import DEFAULT_DB_ALIAS, connections
 from django.db.models.constants import LOOKUP_SEP
 from django.conf import settings
 from django.core.management.commands.inspectdb import Command as InspectbCommand
+from django.apps import apps
 
 
 class Command(InspectbCommand):
     help = ("Introspects the database tables in the given "
             "database and makes models, views, admin and forms files.")
+    admin_module = 'django.contrib'
 
     missing_args_message = (
         "No app label provided. Please provide app label for path."
     )
 
+    def _table2model(self, table_name):
+        return re.sub(r'[^a-zA-Z0-9]', '', table_name.title())
+    
     def add_arguments(self, parser):
         super(Command, self).add_arguments(parser)
         parser.add_argument(
             '--app', action='store', dest='app',
             help='Needs app lablel to identify path to create modules.',
         )
+    
+    def get_auth_tables(self):
+        model_list = ['django_migrations']
+        init_migration_apps = ['sessions', 'contenttypes', 'admin', 'auth']
+        for _app in init_migration_apps:
+            try:
+                for k, v in apps.all_models[_app].items():
+                    model_list.append(v._meta.db_table)
+            except:
+                pass
+        return model_list
 
     def make_dirs(self, app_path):
         '''
@@ -52,12 +68,28 @@ class Command(InspectbCommand):
 
         self.modules_path= modules_path
 
+    def make_admin_file_code(self, table_name, app_label):
+        model_name = self._table2model(table_name)
+        file_code = ''
+        try:
+            file_code += 'from %s import admin\n' % (self.admin_module)
+            file_code += 'from %s.models import %s\n\n\n' % (app_label, model_name)
+            file_code += '@admin.register(%s)\n' % (model_name)
+            file_code +=  'class %sAdmin(admin.ModelAdmin):\n' % model_name
+            file_code += '    pass\n'
+        except:
+            pass
+        return file_code
+
     def make_file(self, table_name):
         '''
            makes different files(models, views, admin and forms)
            in the concerned directories
         '''
+        admin_file_code = self.make_admin_file_code(table_name, app_label)
+
         model_file = ''
+        
         for module, path in self.modules_path.items():
 
             if module == 'admin':
@@ -74,6 +106,10 @@ class Command(InspectbCommand):
 
             if not os.path.exists(path):
                 open(path, 'w').close()
+                if module == 'admin' and admin_file_code != '':
+                    file_handle = open(path, 'w')
+                    file_handle.write(admin_file_code)
+                    file_handle.close()
         return model_file
 
 
@@ -89,7 +125,7 @@ class Command(InspectbCommand):
         table_name_filter = options.get('table_name_filter')
 
         def table2model(table_name):
-            return re.sub(r'[^a-zA-Z0-9]', '', table_name.title())
+            return self._table2model(table_name)
 
         def strip_prefix(s):
             return s[1:] if s.startswith("u'") else s
@@ -101,12 +137,16 @@ class Command(InspectbCommand):
         models_init_file_code = ''
         models_init_file = ("%s/%s") % (self.modules_path['models'], self.init_file) 
         handle_model_init_file = open(models_init_file, 'w')
+        
+        models_to_pass = self.get_auth_tables()
 
         with connection.cursor() as cursor:
             known_models = []
             tables_to_introspect = options['table'] or connection.introspection.table_names(cursor)
 
             for table_name in tables_to_introspect:
+                if table_name in models_to_pass:
+                    continue
 
                 model_file = self.make_file(table_name)
 
