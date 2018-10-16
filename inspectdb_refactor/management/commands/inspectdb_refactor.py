@@ -81,7 +81,7 @@ class Command(InspectbCommand):
             pass
         return file_code
 
-    def make_file(self, table_name):
+    def make_file(self, table_name, app_label):
         '''
            makes different files(models, views, admin and forms)
            in the concerned directories
@@ -148,7 +148,7 @@ class Command(InspectbCommand):
                 if table_name in models_to_pass:
                     continue
 
-                model_file = self.make_file(table_name)
+                model_file = self.make_file(table_name, app_label)
 
                 handle = open(model_file, 'w')
 
