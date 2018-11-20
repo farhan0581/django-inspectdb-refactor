@@ -1,3 +1,4 @@
+![latest version](https://badge.fury.io/py/django-inspectdb-refactor.svg)
 
 Django Inspectdb Refactor
 ========================
