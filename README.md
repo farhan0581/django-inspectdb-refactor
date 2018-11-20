@@ -1,4 +1,4 @@
-![latest version](https://badge.fury.io/py/django-inspectdb-refactor.svg)
+[![PyPI version](https://badge.fury.io/py/django-inspectdb-refactor.svg)](https://badge.fury.io/py/django-inspectdb-refactor)
 
 Django Inspectdb Refactor
 ========================
