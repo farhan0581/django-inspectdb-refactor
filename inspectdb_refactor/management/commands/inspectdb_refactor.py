@@ -142,7 +142,11 @@ class Command(InspectbCommand):
 
         with connection.cursor() as cursor:
             known_models = []
-            tables_to_introspect = options['table'] or connection.introspection.table_names(cursor)
+            table_info = connection.introspection.get_table_list(cursor)
+            tables_to_introspect = (
+                options['table'] or
+                sorted(info.name for info in table_info if options['include_views'] or info.type == 't')
+            )
 
             for table_name in tables_to_introspect:
                 if table_name in models_to_pass:
@@ -262,7 +266,8 @@ class Command(InspectbCommand):
                     if comment_notes:
                         field_desc += '  # ' + ' '.join(comment_notes)
                     file_code +=  '    %s\n' % field_desc
-                for meta_line in self.get_meta(table_name, constraints, column_to_field_name):
+                is_view = any(info.name == table_name and info.type == 'v' for info in table_info)
+                for meta_line in self.get_meta(table_name, constraints, column_to_field_name, is_view):
                     file_code +=  "%s\n" % (meta_line)
                     
                 handle.write(file_code)
