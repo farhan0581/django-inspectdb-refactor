@@ -43,7 +43,7 @@ Usage:
   For example, If you have an app called ``products`` and database ``product_db`` then
   
   `
-  python manage.py inspectdb_refactor --database=product --app=product_db
+  python manage.py inspectdb_refactor --database=product_db --app=products
   `
  
 
