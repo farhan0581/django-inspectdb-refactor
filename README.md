@@ -45,7 +45,14 @@ Usage:
   `
   python manage.py inspectdb_refactor --database=product_db --app=products
   `
- 
+
+Upgrading:
+---------
+
+See [CHANGELOG](https://github.com/farhan0581/django-inspectdb-refactor/blob/master/CHANGELOG.md)
+
+For Django versions less then 2.1 use v0.3 using `pip install django-inspectdb-refactor==0.3`
+
 
 License:
 --------
