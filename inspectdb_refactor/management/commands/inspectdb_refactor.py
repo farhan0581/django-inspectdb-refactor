@@ -21,14 +21,14 @@ class Command(InspectbCommand):
 
     def _table2model(self, table_name):
         return re.sub(r'[^a-zA-Z0-9]', '', table_name.title())
-    
+
     def add_arguments(self, parser):
         super(Command, self).add_arguments(parser)
         parser.add_argument(
             '--app', action='store', dest='app',
             help='Needs app lablel to identify path to create modules.',
         )
-    
+
     def get_auth_tables(self):
         model_list = ['django_migrations']
         init_migration_apps = ['sessions', 'contenttypes', 'admin', 'auth']
@@ -43,7 +43,7 @@ class Command(InspectbCommand):
     def make_dirs(self, app_path):
         '''
            creates models, views, admin and forms
-           folder and empty files, except for models.    
+           folder and empty files, except for models.
         '''
         modules_path = {}
         dirs_to_make = ['models', 'admin', 'views', 'forms']
@@ -51,7 +51,7 @@ class Command(InspectbCommand):
 
         for module in dirs_to_make:
             dir_path = ("%s/%s") % (app_path, module)
-            
+
             # check if dir exists
             if not os.path.exists(dir_path):
                 try:
@@ -89,11 +89,11 @@ class Command(InspectbCommand):
         admin_file_code = self.make_admin_file_code(table_name, app_label)
 
         model_file = ''
-        
+
         for module, path in self.modules_path.items():
 
             if module == 'admin':
-                file_name = "%s_admin.py" % table_name 
+                file_name = "%s_admin.py" % table_name
             elif module == 'views':
                 file_name = "%s_view.py" % table_name
             elif module == 'forms':
@@ -129,15 +129,15 @@ class Command(InspectbCommand):
 
         def strip_prefix(s):
             return s[1:] if s.startswith("u'") else s
-        
+
         app_label = options.get('app')
         app_path = ("%s/%s") % (settings.BASE_DIR, app_label)
 
         self.make_dirs(app_path)
         models_init_file_code = ''
-        models_init_file = ("%s/%s") % (self.modules_path['models'], self.init_file) 
+        models_init_file = ("%s/%s") % (self.modules_path['models'], self.init_file)
         handle_model_init_file = open(models_init_file, 'w')
-        
+
         models_to_pass = self.get_auth_tables()
 
         with connection.cursor() as cursor:
@@ -159,7 +159,7 @@ class Command(InspectbCommand):
                 file_code = ''
 
                 models_init_file_code += "from %s.models.%s import %s\n" % (
-                                            
+
                                 app_label, model_file.split("/")[-1].split(".")[0], table2model(table_name)
                             )
 
@@ -267,10 +267,11 @@ class Command(InspectbCommand):
                         field_desc += '  # ' + ' '.join(comment_notes)
                     file_code +=  '    %s\n' % field_desc
                 is_view = any(info.name == table_name and info.type == 'v' for info in table_info)
-                for meta_line in self.get_meta(table_name, constraints, column_to_field_name, is_view):
+                is_partition = any(info.name == table_name and info.type == 'p' for info in table_info)
+                for meta_line in self.get_meta(table_name, constraints, column_to_field_name, is_view, is_partition):
                     file_code +=  "%s\n" % (meta_line)
-                    
+
                 handle.write(file_code)
 
-        # models init file code        
+        # models init file code
         handle_model_init_file.write(models_init_file_code)
